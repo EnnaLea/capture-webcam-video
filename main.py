@@ -1,5 +1,6 @@
 import cv2
 import time
+from emailing import send_email
 
 # start a video
 # the number refer to numbers of cameras, in a laptop with
@@ -10,8 +11,11 @@ time.sleep(1)
 
 first_frame = None
 
+status_list = []
+
 # show the image
 while True:
+    status = 0
     check, frame = video.read()
     # convert the frames in grayscale
     gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -36,7 +40,19 @@ while True:
         if cv2.contourArea(contour) < 5000:
             continue
         x, y, w, h = cv2.boundingRect(contour)
-        cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 3)
+        rectangle = cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 3)
+        if rectangle.any():
+            status = 1
+
+
+    status_list.append(status)
+    # we get only the last two items of the list
+    status_list = status_list[-2:]
+
+    if status_list[0] == 1 and status_list[1] == 0:
+        send_email()
+
+    print(status_list)
 
     cv2.imshow("Video", frame)
 
